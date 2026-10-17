@@ -1,0 +1,30 @@
+name: Verify and publish GoalAlert updates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'enigma2-plugin-extensions-goalalert_*_all.ipk'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out public update channel
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Check package, privacy, version and SHA-256
+        run: python3 scripts/publish.py
+      - name: Publish checked manifest
+        run: |
+          git config user.name "goalalert-update-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish verified GoalAlert update manifest"
+            git push
+          fi
