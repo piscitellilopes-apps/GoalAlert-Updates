@@ -1,0 +1,37 @@
+name: Build and verify GoalAlert 6.13.9 glass UI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/release_6139.py'
+      - 'scripts/goalalert_glass_art.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: goalalert-6139
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install HD image renderer
+        run: python3 -m pip install --user Pillow --break-system-packages
+      - name: Patch and verify 6.13.9 (scores, glass art, lineup)
+        run: python3 scripts/release_6139.py
+      - name: Verify IPK and create SHA-256 manifest
+        run: python3 scripts/publish.py
+      - name: Publish verified package
+        run: |
+          git config user.name "goalalert-update-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add enigma2-plugin-extensions-goalalert_6.13.9_all.ipk latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish GoalAlert 6.13.9 HD glass and centered score"
+            git push
+          fi
