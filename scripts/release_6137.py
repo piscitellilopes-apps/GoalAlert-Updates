@@ -149,7 +149,9 @@ s=replace_once(s,
                 return
             self["menu"].setList([g.get("day","")+" | "+g.get("time","")+" | "+g["home"]+" - "+g["away"] for g in self.games])
             self["hint"].setText(status+" | %d passende TV-Eintraege | OK: Sender anzeigen"%len(self.games))""")
-s=replace_once(s,'6.13.6','6.13.7')
+if s.count('6.13.6')!=6:
+    raise SystemExit('Unexpected version references: '+str(s.count('6.13.6')))
+s=s.replace('6.13.6','6.13.7')
 plugin.write_text(s,encoding='utf-8')
 (ROOT/'source/VERSION').write_text('6.13.7\n',encoding='utf-8')
 
