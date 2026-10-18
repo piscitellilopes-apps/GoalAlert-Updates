@@ -25,3 +25,9 @@ Erst wenn `enigma2-plugin-extensions-goalalert_6.13.5_all.ipk` ins Repository ho
 - Ein Update benötigt die ausdrückliche Bestätigung am TV.
 - Nova-IPTV und PlayerTrack-AI bleiben separate Projekte.
 - Offene Hardware-Tests: Tor-Audio, Originalwappen, realer IPTV-Senderwechsel.
+
+## Automatischer Quellcode-Build (neu eingerichtet)
+
+Der Workflow [build-from-source.yml](.github/workflows/build-from-source.yml) und das [Build-Skript](scripts/build_ipk.py) sind veröffentlicht. Sobald `source/GoalAlert/` mit der vollständigen Plugin-Quelle inklusive Grafiken und `source/VERSION` vorhanden ist, kann GitHub IPKs **ohne lokalen Binär-Upload** aus dem Repository erzeugen, prüfen und zusammen mit `latest.json` committen.
+
+**Der Quellcode ist noch nicht vollständig im Repository.** Deshalb ist diese Pipeline vorbereitet, aber noch nicht für 6.13.5 einsatzbereit. Bitte keine automatische Installationsfreigabe behaupten, bevor die GitHub-IPK existiert und ihre Prüfsumme stimmt.
