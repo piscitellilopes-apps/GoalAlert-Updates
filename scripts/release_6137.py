@@ -51,6 +51,10 @@ m=replace_once(m,
     'man united fc':'manchester united',
     'leeds':'leeds united', 'leeds utd':'leeds united',
     'leeds united fc':'leeds united', 'leeds united afc':'leeds united',""")
+# Normalize \"U-21\" and \"U 21\" into \"u21\" before youth-team safety checks.
+m=replace_once(m,
+    "    s=re.sub(r'[^a-z0-9]+',' ',s).strip()\n    s=re.sub(r'\\s+',' ',s)",
+    "    s=re.sub(r'[^a-z0-9]+',' ',s).strip()\n    s=re.sub(r'\\bu\\s+(1[6-9]|2[0-3])\\b', r'u\\1', s)\n    s=re.sub(r'\\s+',' ',s)")
 matcher.write_text(m,encoding='utf-8')
 
 plugin=DEST/'plugin.py'
