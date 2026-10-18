@@ -1,0 +1,49 @@
+name: Build and publish GoalAlert from source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'source/**'
+      - 'scripts/build_ipk.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: goalalert-source-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Detect complete source tree
+        id: source
+        run: |
+          if [ -f source/VERSION ] && [ -f source/GoalAlert/plugin.py ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Source tree not yet committed. No release will be made."
+          fi
+      - name: Build clean IPK from committed sources
+        if: steps.source.outputs.ready == 'true'
+        run: python3 scripts/build_ipk.py
+      - name: Validate and create latest.json
+        if: steps.source.outputs.ready == 'true'
+        run: python3 scripts/publish.py
+      - name: Commit binary and checked manifest
+        if: steps.source.outputs.ready == 'true'
+        run: |
+          git config user.name "goalalert-update-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add enigma2-plugin-extensions-goalalert_*_all.ipk latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Build and publish verified GoalAlert package from source"
+            git push
+          fi
