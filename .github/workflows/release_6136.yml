@@ -1,0 +1,36 @@
+name: Publish GoalAlert 6.13.6 repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/release_6136.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: goalalert-6136-publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Build patched package from verified 6.13.5 baseline
+        run: python3 scripts/release_6136.py
+      - name: Validate package and generate SHA-256 manifest
+        run: python3 scripts/publish.py
+      - name: Commit validated IPK and manifest
+        run: |
+          git config user.name "goalalert-update-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add enigma2-plugin-extensions-goalalert_6.13.6_all.ipk latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Release verified GoalAlert 6.13.6 popup crest updater fixes"
+            git push
+          fi
