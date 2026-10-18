@@ -1,7 +1,7 @@
 {
   "package": "enigma2-plugin-extensions-goalalert",
-  "version": "6.13.7",
-  "url": "https://raw.githubusercontent.com/piscitellilopes-apps/GoalAlert-Updates/main/enigma2-plugin-extensions-goalalert_6.13.7_all.ipk",
-  "sha256": "c96bb298f25b298593623df7a79af98350fd62b078a304fa801cc162141844c3",
+  "version": "6.13.8",
+  "url": "https://raw.githubusercontent.com/piscitellilopes-apps/GoalAlert-Updates/main/enigma2-plugin-extensions-goalalert_6.13.8_all.ipk",
+  "sha256": "cec9d586a4b5634cc5d1913b3664bd01019d5a9654257c861b1b72db694e868e",
   "notes": "GoalAlert Update. Vor Installation Hinweise und bekannte Probleme pruefen."
 }
