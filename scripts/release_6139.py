@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build GoalAlert 6.13.9: exactly centered scores, true glass PNG corners,
 high-definition transparent artwork and an optional ESPN lineup screen.
-Preserves all verified 6.13.8 functions; no IPTV credentials are packaged.
+Preserves verified 6.13.8 functions; keeps private IPTV credentials off GitHub.\nA successful build is required before latest.json may change.
 """
 import hashlib
 import io
