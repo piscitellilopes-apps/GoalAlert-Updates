@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Release 6.13.8 from verified 6.13.7; fix LIVE | WELTWEIT fake matches.
 
-Only fully named fixtures in an explicit in-progress state qualify as live.
+Only fully named fixtures in an explicit in-progress state qualify as live.\nDo not label missing-club records as live scores.
 If the third-party LiveScore API returns invalid or no fixtures, show
 verified ESPN fixtures with transparent coverage/source labels.
 """
