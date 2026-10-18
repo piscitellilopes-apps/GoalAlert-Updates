@@ -224,5 +224,8 @@ path.write_text(s,encoding='utf-8')
 shutil.copyfile(ROOT/'releases/6.13.6_apply_update.py',DEST/'goalalert_apply_update.py')
 (ROOT/'source/VERSION').write_text('6.13.6\n')
 subprocess.run(['python3','-m','py_compile',str(path),str(DEST/'goalalert_apply_update.py')],check=True)
+# Syntaxcheck erzeugt __pycache__; niemals kompilierte lokale Artefakte paketieren.
+for cache in DEST.rglob('__pycache__'):
+    shutil.rmtree(cache)
 subprocess.run(['python3','scripts/build_ipk.py'],check=True,cwd=ROOT)
 print('GoalAlert 6.13.6 repaired IPK assembled from base, with no personal IPTV credentials')
