@@ -171,7 +171,7 @@ fake={"children":[{"name":"Premier League","standings":{"entries":[
       {"name":"points","displayValue":"22"}]}]}}]}
 rows=scope["parse_standings"](fake)
 assert any("Arsenal" in line and "22" in line and "+15" in line for line in rows)
-assert "Keine bestaetigten" in " ".join(scope["parse_standings"]({}))
+assert "keine bestaetigten" in " ".join(scope["parse_standings"]({}))
 assert scope["validate_league_code"]("eng.1")=="eng.1"
 for malformed in ("/etc/passwd","", "../eng.1"):
     try:scope["validate_league_code"](malformed)
