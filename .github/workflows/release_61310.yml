@@ -1,0 +1,37 @@
+name: Build GoalAlert 6.13.10 standings and glass
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/release_61310.py'
+      - 'scripts/goalalert_standings_lib.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: goalalert-61310-build
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PNG alpha test dependencies
+        run: python3 -m pip install --user Pillow --break-system-packages
+      - name: Build and run self-tests for transparent popup and league standings
+        run: python3 scripts/release_61310.py
+      - name: Validate IPK and create cryptographic update manifest
+        run: python3 scripts/publish.py
+      - name: Publish checked release and latest.json
+        run: |
+          git config user.name "goalalert-update-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add enigma2-plugin-extensions-goalalert_6.13.10_all.ipk latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish GoalAlert 6.13.10 translucent popup and standings"
+            git push
+          fi
