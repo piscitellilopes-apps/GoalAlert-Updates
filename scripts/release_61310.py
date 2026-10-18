@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GoalAlert 6.13.10: league table hotkey and clear glass overlays.
+"""GoalAlert 6.13.10: league standings hotkey and clear glass overlays.
 
 Rebuild from exact previously published 6.13.9 package. No user settings,
 private IPTV index or credentials are packaged. GitHub publishes on success.
