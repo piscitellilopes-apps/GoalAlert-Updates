@@ -55,6 +55,9 @@ m=replace_once(m,
 m=replace_once(m,
     "    s=re.sub(r'[^a-z0-9]+',' ',s).strip()\n    s=re.sub(r'\\s+',' ',s)",
     "    s=re.sub(r'[^a-z0-9]+',' ',s).strip()\n    s=re.sub(r'\\bu\\s+(1[6-9]|2[0-3])\\b', r'u\\1', s)\n    s=re.sub(r'\\s+',' ',s)")
+# Normalize category tokens before punctuation stripping (e.g. U-21 -> u21).
+m=m.replace("    s=re.sub(r'[^a-z0-9]+',' ',s).strip()",
+            "    s=re.sub(r'\\bu[\\s_-]*(1[6-9]|2[0-3])\\b',r'u\\1',s)\\n    s=re.sub(r'[^a-z0-9]+',' ',s).strip()")
 matcher.write_text(m,encoding='utf-8')
 
 plugin=DEST/'plugin.py'
