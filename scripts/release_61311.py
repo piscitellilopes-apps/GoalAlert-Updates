@@ -45,7 +45,7 @@ def patch(old,new):
 
 # 6.13.10 made SCREEN transparent but left ePixmap alphatest='off',
 # which can render an opaque black rectangular pixmap over the TV.
-patch('name="theme_bg" pixmap="{root}{theme}" position="0,0" size="{w},{h}" zPosition="0" alphatest="off"',
+patch('name="theme_bg" pixmap="{root}{theme}" position="0,0" size="{w},{h}" zPosition="0" alphatest="on"',
       'name="theme_bg" pixmap="{root}{theme}" position="0,0" size="{w},{h}" zPosition="0" transparent="1" alphatest="blend"')
 patch('<screen name="GoalPopup" position="center,18" size="{w},{h}" flags="wfNoBorder" transparent="1" backgroundColor="#FF000000">',
       '<screen name="GoalPopup" position="center,18" size="{w},{h}" flags="wfNoBorder" transparent="1" backgroundColor="transparent">')
