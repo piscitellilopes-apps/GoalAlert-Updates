@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """GoalAlert 6.13.12 hotfix: accept OpenATV /tmp symlink safely.
 
-Existing versions 6.13.6 through 6.13.11 rejected valid IPKs when
+Earlier installers 6.13.6 through 6.13.11 rejected valid IPKs when
 os.path.realpath('/tmp') != '/tmp'. This patch compares canonical paths to
 the same canonical staging directory. SHA-256, control fields and correct
 package naming remain mandatory. No private settings or bouquets included.
