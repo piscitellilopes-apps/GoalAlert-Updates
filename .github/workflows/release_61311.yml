@@ -1,0 +1,38 @@
+name: Release GoalAlert 6.13.11 glass and Torjubel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/release_61311.py'
+      - 'scripts/goalalert_audio_lib.py'
+      - 'scripts/goalalert_cheer_variants.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: goalalert-61311
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install transparent image dependencies
+        run: python3 -m pip install --user Pillow --break-system-packages
+      - name: Build, syntax-check and test 6.13.11
+        run: python3 scripts/release_61311.py
+      - name: Validate safe IPK and generate SHA256 update manifest
+        run: python3 scripts/publish.py
+      - name: Publish verified 6.13.11 and manifest
+        run: |
+          git config user.name "goalalert-update-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add enigma2-plugin-extensions-goalalert_6.13.11_all.ipk latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish GoalAlert 6.13.11 true glass and selectable Torjubel"
+            git push
+          fi
