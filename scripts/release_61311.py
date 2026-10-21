@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build GoalAlert 6.13.11 from cryptographically pinned 6.13.10.
 
-Replace the incorrect alpha-off renderer; add true glass blending,
+Replace the incorrect alpha-off renderer; enable actual translucent blending,
 high-quality badge edges, four user-selectable cheer sounds and mixer-first
 playback with diagnostics. Changes must pass static tests before publishing.
 """
