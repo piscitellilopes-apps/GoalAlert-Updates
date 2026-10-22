@@ -1,0 +1,41 @@
+name: GoalAlert 6.13.13 GOAL animation and updater integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/release_61313.py'
+      - 'scripts/goalalert_intro_art.py'
+      - 'scripts/goalalert_lineups_lib.py'
+      - 'scripts/test_61313_updater.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: goalalert-61313
+  cancel-in-progress: false
+
+jobs:
+  verify_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install image renderer
+        run: python3 -m pip install --user Pillow --break-system-packages
+      - name: Build and static-test 6.13.13
+        run: python3 scripts/release_61313.py
+      - name: Verify IPK privacy/metadata and produce latest.json
+        run: python3 scripts/publish.py
+      - name: Simulate end-to-end online update and installer
+        run: python3 scripts/test_61313_updater.py
+      - name: Publish validated IPK and manifest
+        run: |
+          git config user.name "goalalert-update-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add enigma2-plugin-extensions-goalalert_6.13.13_all.ipk latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Release GoalAlert 6.13.13 GOAL animation and updater verification"
+            git push
+          fi
