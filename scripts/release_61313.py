@@ -2,7 +2,7 @@
 """GoalAlert 6.13.13: verified updater contract, animated GOAL intro, real lineups.
 
 Build exclusively from published 6.13.12 IPK, pinned to SHA-256.
-The CI test suite exercises the install helper with a FAKE opkg and
+The CI test suite exercises the installed helper with a FAKE opkg and
 FAKE init commands, so no receiver or runner OS is modified.
 """
 from pathlib import Path, PurePosixPath
