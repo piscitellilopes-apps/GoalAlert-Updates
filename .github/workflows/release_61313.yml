@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: goalalert-61313
+  group: goalalert-61313-second-run
   cancel-in-progress: false
 
 jobs:
