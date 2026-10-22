@@ -23,7 +23,7 @@ sys.path.insert(0,str(UPDATER.parent))
 u=runpy.run_path(str(UPDATER),run_name='goalalert_updater_test')
 assert u['DEFAULT_SOURCE']==FIXED
 # urllib mock – the exact JSON that the TV reads, no network required.
-u['_open_https']=lambda url,timeout=10: io.BytesIO((ROOT/'latest.json').read_bytes())
+u['check_manifest'].__globals__['_open_https']=lambda url,timeout=10: io.BytesIO((ROOT/'latest.json').read_bytes())
 info=u['check_manifest'](FIXED,'6.13.12')
 assert info['newer'] and info['version']==V and info['sha256']==digest
 assert u['check_manifest'](FIXED,V)['newer'] is False
@@ -36,8 +36,8 @@ shutil.copy2(PKG,stage)
 try:
     assert g['staged_package_ok'](str(stage))
     trace=[]
-    g['notify']=lambda state,msg:trace.append(('status',state,msg))
-    g['run']=lambda argv,timeout: (trace.append(('command',list(argv))) or (0,'TEST opkg installed; GUI restart simulated'))
+    g['main'].__globals__['notify']=lambda state,msg:trace.append(('status',state,msg))
+    g['main'].__globals__['run']=lambda argv,timeout: (trace.append(('command',list(argv))) or (0,'TEST opkg installed; GUI restart simulated'))
     which=g['shutil'].which
     g['shutil'].which=lambda name:'/usr/bin/opkg' if name=='opkg' else which(name) or '/sbin/init'
     g['time'].sleep=lambda seconds:None
