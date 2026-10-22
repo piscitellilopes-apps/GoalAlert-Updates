@@ -215,11 +215,9 @@ s=s[:start]+'''    def _after_goal_intro(self,token,details):
 patch("kind='goal',home_url=g.get('home_logo'),away_url=g.get('away_logo'),game=g)",
       "kind='goal',home_url=g.get('home_logo'),away_url=g.get('away_logo'),game=g,scoring_side=side)")
 
-# Audio diagnosis: never falsely promise a second PCM sound always mixes.
-# Show likely AC3/bitstream mixer issues in existing diagnostic screen.
-patch("               'WICHTIG: TV-Ton muss weiterhin laufen.',",
-      "               'TV-Ton an: Mischung benoetigt einen freien PCM-Audiomixer.',\n"
-      "               'Bei Stille: OpenATV > Audio > AC3-Downmix pruefen.',")
+# Audio diagnosis: indicate that simultaneous audio needs PCM mixing.
+patch("'WICHTIG: TV-Ton muss weiterhin laufen.'",
+      "'TV-Ton an: PCM-Mischung benoetigt. Bei Stille AC3-Downmix pruefen.'")
 
 # Keep the proven stable GitHub update channel and current-version comparisons.
 if 'DEFAULT_SOURCE' not in (DEST/'goalalert_updater.py').read_text(encoding='utf-8'):
