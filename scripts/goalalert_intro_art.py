@@ -82,7 +82,10 @@ def render(outw,outh,suffix):
         bx=int((-115+220*(t**.68))*ss)
         by=int((outh-136)/2*ss)
         sprite=ball.rotate(-k*35,resample=Image.Resampling.BICUBIC,expand=False)
-        frame.alpha_composite(sprite,(bx,by))
+        x0,y0=max(0,-bx),max(0,-by)
+        x1,y1=min(sprite.width,w-bx),min(sprite.height,h-by)
+        if x1>x0 and y1>y0:
+            frame.alpha_composite(sprite.crop((x0,y0,x1,y1)),(max(0,bx),max(0,by)))
         # Slim light streak from ball, not a rectangular solid underlay.
         trail=max(0,bx+30*ss)
         if trail>0:
