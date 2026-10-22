@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Temporary engineering inspection of public 6.13.12 IPK source.
+"""Scoped engineering inspection of public 6.13.12 IPK source.
 Print only selected PUBLIC code regions to GitHub CI log.
 """
 import io
