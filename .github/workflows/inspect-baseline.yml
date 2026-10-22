@@ -1,0 +1,19 @@
+name: Inspect published GoalAlert baseline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/inspect_61312.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Display selected public baseline code sections
+        run: python3 scripts/inspect_61312.py
