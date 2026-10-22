@@ -7,7 +7,7 @@ All backgrounds are true RGBA with transparent exterior corners.
 """
 from pathlib import Path
 import math
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageChops
 OUT=Path(__file__).resolve().parents[1]/'source'/'GoalAlert'
 OUT.mkdir(parents=True,exist_ok=True)
 FRAMES=12
@@ -91,8 +91,15 @@ def render(outw,outh,suffix):
         if trail>0:
             d.line((max(12,trail-38*ss),h//2,trail,h//2),
                    fill=(70,228,255,int(120*(1-t))),width=2*ss)
-        frame.resize((outw,outh),Image.Resampling.LANCZOS).save(
-            OUT/('ga_goal_intro_%02d%s.png'%(k,suffix)),optimize=True)
+        rendered=frame.resize((outw,outh),Image.Resampling.LANCZOS)
+        # Force fully transparent outside the rounded overlay even when
+        # downsampling or light-glow blur bleeds into its outer corners.
+        mask=Image.new('L',(outw,outh),0)
+        md=ImageDraw.Draw(mask)
+        md.rounded_rectangle((1,1,outw-2,outh-2),radius=max(12,int(outh*.18)),fill=255)
+        alpha=ImageChops.multiply(rendered.getchannel('A'),mask)
+        rendered.putalpha(alpha)
+        rendered.save(OUT/('ga_goal_intro_%02d%s.png'%(k,suffix)),optimize=True)
         final=Image.open(OUT/('ga_goal_intro_%02d%s.png'%(k,suffix)))
         assert final.getpixel((0,0))[3]==0 and final.getpixel((outw-1,outh-1))[3]==0
     print('Rendered',suffix,'frames',FRAMES)
