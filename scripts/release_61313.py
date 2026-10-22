@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """GoalAlert 6.13.13: verified updater contract, animated GOAL intro, real lineups.
 
-Build exclusively from published 6.13.12 IPK, pinned to SHA-256.
+Build exclusively from verified published 6.13.12 IPK, pinned to SHA-256.
 The CI test suite exercises the real installed helper with a FAKE opkg and
 FAKE init commands, so no receiver or runner OS is modified.
 """
