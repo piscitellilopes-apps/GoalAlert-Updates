@@ -48,8 +48,8 @@ patch("targets=[(name,code) for name,code in LEAGUES if code in selected_leagues
       """targets=sorted(LEAGUES,key=lambda item:(
             0 if item[1] in ('sui.1','sui.2','sui.cup') else
             (1 if item[1] in selected_leagues else 2),item[0]))""")
-patch("with ThreadPoolExecutor(max_workers=7) as pool:",
-      "with ThreadPoolExecutor(max_workers=18) as pool:")
+patch("with ThreadPoolExecutor(max_workers=7) as pool:\n            futures={pool.submit(get_games,code,date):name for name,code in targets}",
+      "with ThreadPoolExecutor(max_workers=18) as pool:\n            futures={pool.submit(get_games,code,date):name for name,code in targets}")
 # Swiss Cup might be absent from ESPN on some days, but querying its own
 # competition code does not suppress the existing two Swiss leagues.
 patch("('Challenge League Schweiz', 'sui.2'),",
