@@ -1,0 +1,40 @@
+name: Inspect GoalAlert baseline source
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/goalalert_inspect_request.txt'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Extract public Python source only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import io,tarfile,subprocess,hashlib
+          file=Path('enigma2-plugin-extensions-goalalert_6.13.13_all.ipk')
+          want='fc1880bd2f332599a688d0e62bd7289b08a1d9b8657bcd84c2caa08ab8f574f8'
+          assert hashlib.sha256(file.read_bytes()).hexdigest()==want
+          data=subprocess.check_output(['ar','p',str(file),'data.tar.xz'])
+          with tarfile.open(fileobj=io.BytesIO(data),mode='r:xz') as arc:
+              plugin=next(m for m in arc if m.name.lstrip('./')=='usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/plugin.py')
+              s=arc.extractfile(plugin).read()
+          p=Path('inspection/goalalert_61313_plugin.py')
+          p.parent.mkdir(parents=True,exist_ok=True)
+          p.write_bytes(s)
+          print('Extracted clean baseline',len(s),'bytes')
+          PY
+          git config user.name goalalert-inspection-bot
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git add inspection/goalalert_61313_plugin.py
+          if ! git diff --cached --quiet; then
+            git commit -m "Snapshot public GoalAlert 6.13.13 Python source for corrections"
+            git push
+          fi
