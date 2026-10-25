@@ -1,0 +1,1 @@
+Snapshot the publicly published GoalAlert 6.13.13 plugin.py for review and safe patching. No user data.
