@@ -1,0 +1,1 @@
+Release request 6.13.14: run regression checks, verify pinned baseline and online updater manifest. Never bundle user settings.
