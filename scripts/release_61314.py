@@ -324,7 +324,7 @@ path.write_text(s,encoding='utf-8')
 (ROOT/'source/VERSION').write_text('6.13.14\n',encoding='utf-8')
 compile(s,str(path),'exec')
 # Regression checks on text and concrete art images. No live receiver needed.
-assert 'for name,code in LEAGUES if code in selected_leagues' not in s
+assert 'targets=[(name,code) for name,code in LEAGUES if code in selected_leagues]' not in s
 assert "kind='cancel'" in s and "kind='redcard'" in s
 assert 'self.pending_corrections' in s and 'self.red_card_seen' in s
 assert "backgroundColor=\"transparent\"" in s
