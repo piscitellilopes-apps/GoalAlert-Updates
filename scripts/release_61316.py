@@ -130,7 +130,7 @@ replace('''        # The scorer popup is silent. Playing before GOAL screen tran
         # event arrived. Intro is purely visual and never starts audio.
         self.advance()''')
 replace('''            if kind=='goal' and not intro_finished:
-                which=scoring_side if scoring_side in ('home','away') else 'home' ''',
+                which=scoring_side if scoring_side in ('home','away') else 'home''',
 '''            if kind=='goal' and not intro_finished:
                 # Start sound on the event, independent of intro rendering.
                 try:
