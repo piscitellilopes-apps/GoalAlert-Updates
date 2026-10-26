@@ -19,12 +19,12 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import io,tarfile,subprocess,hashlib
-          file=Path('enigma2-plugin-extensions-goalalert_6.13.14_all.ipk')
-          want='397ed960397ba2e1149382ad5252144cff02b82d803da6745591e33429b1893c'
+          file=Path('enigma2-plugin-extensions-goalalert_6.13.15_all.ipk')
+          want='9a9425bda44195b3c3197a971bffc955f5913687aa94f16fed475c1a28103c2f'
           assert hashlib.sha256(file.read_bytes()).hexdigest()==want
           data=subprocess.check_output(['ar','p',str(file),'data.tar.xz'])
           with tarfile.open(fileobj=io.BytesIO(data),mode='r:xz') as arc:
-              names=('plugin.py','iptv_index.py','liveonsat_parser.py','fixture_match.py','refresh_iptv_index.py')
+              names=('plugin.py','iptv_index.py','liveonsat_parser.py','fixture_match.py','refresh_iptv_index.py','goalalert_audio.py','goalalert_standings.py','goalalert_lineups.py','goalalert_crests.py')
               prefix='usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/'
               for name in names:
                   matching=[m for m in arc if m.name.lstrip('./')==prefix+name]
@@ -38,6 +38,6 @@ jobs:
           git config user.email github-actions[bot]@users.noreply.github.com
           git add inspection/goalalert_61314_*.py
           if ! git diff --cached --quiet; then
-            git commit -m "Snapshot 6.13.14 source and public helper libraries for targeted fixes"
+            git commit -m "Snapshot 6.13.15 source and public helper libraries for targeted fixes"
             git push
           fi
