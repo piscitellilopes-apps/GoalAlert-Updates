@@ -1,0 +1,1 @@
+Release GoalAlert 6.13.16: checked 6.13.15 base; patch UI, TV guide and audio/scorer behavior; validate IPK and manifest.
