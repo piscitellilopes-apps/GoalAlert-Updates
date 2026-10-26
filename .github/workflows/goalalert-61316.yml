@@ -1,0 +1,46 @@
+name: GoalAlert 6.13.16 build and validate
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/goalalert_61316_request.txt'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: goalalert-61316-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Build from checksum-pinned 6.13.14, run offline regression checks
+        run: |
+          python3 -m pip install --disable-pip-version-check pillow
+          python3 scripts/release_61316.py
+      - name: Verify IPK metadata and digest in updater manifest
+        run: |
+          python3 scripts/publish.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          manifest=json.loads(Path('latest.json').read_text())
+          assert manifest['version']=='6.13.16'
+          assert manifest['package']=='enigma2-plugin-extensions-goalalert'
+          package=Path(manifest['url'].rsplit('/',1)[-1])
+          assert package.is_file()
+          assert hashlib.sha256(package.read_bytes()).hexdigest()==manifest['sha256']
+          print('GoalAlert 6.13.16 checksum verified')
+          PY
+      - name: Commit release package and activate updater
+        run: |
+          git config user.name goalalert-update-bot
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git add enigma2-plugin-extensions-goalalert_6.13.16_all.ipk latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Release checked GoalAlert 6.13.16'
+            git push
+          fi
