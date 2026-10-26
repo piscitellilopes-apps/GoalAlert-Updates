@@ -63,8 +63,8 @@ change('''    def fetch(self):
 # Enigma2 UI: dark PNGs + alphatest='off' were obscuring the live game even
 # when the parent screen was otherwise transparent. Use RGB-alpha PNG
 # sprites with 'blend' and transparent menu widgets across Home/Detail/Base.
-change('''backgroundColor="#07162F">''','''transparent="1" backgroundColor="transparent">''',3)
-change('''alphatest="off" />''','''transparent="1" alphatest="blend" />''',3)
+change('''backgroundColor="#07162F">''','''transparent="1" backgroundColor="transparent">''',4)
+change('''alphatest="off" />''','''transparent="1" alphatest="blend" />''',4)
 change('''backgroundColor="#101E3F" scrollbarMode''',
        '''transparent="1" backgroundColor="#142D45" scrollbarMode''')
 change('''backgroundColor="#102548" scrollbarMode''',
@@ -84,8 +84,7 @@ change("self.anim.start(80,False)","self.anim.start(90,False)")
 # avoid 10 min stale cache on a manual refresh, but retain cached guide if
 # both external sources are unavailable. Data failures never invent channels.
 change('def liveonsat_schedule(day=None):','def liveonsat_schedule(day=None,force=False):')
-change("if (cache.get('date')==requested and time.time()-float(cache.get('saved',0))<600\n             and cache.get('games')):",
-       "if (not force and cache.get('date')==requested and time.time()-float(cache.get('saved',0))<600\n             and cache.get('games')):")
+change("if (cache.get('date')==requested", "if (not force and cache.get('date')==requested")
 change("    def blue(self):\n        if self.busy:return\n        # BLAU aktualisiert immer die aktuelle Begegnung, niemals die ganze Liste.",
        "    def blue(self):\n        if self.busy:return\n        # BLAU aktualisiert immer die aktuelle Begegnung, niemals die ganze Liste.")
 change('''    def fetch(self):
@@ -411,7 +410,7 @@ def font(size):
     return ImageFont.load_default()
 
 for name,w,h in (('ga_menu',950,610),('ga_home',1120,670),
-                 ('ga_detail',1120,630),('ga_live_glass',950,610)):
+                 ('ga_detail',1120,630),('ga_tip',1120,660),('ga_live_glass',950,610)):
     for suffix,scale in (('',1),('_fhd',1.5)):
         sw,sh=int(w*scale),int(h*scale)
         SS=2;W,H=sw*SS,sh*SS
@@ -507,7 +506,7 @@ with tempfile.TemporaryDirectory() as tmp:
     assert iptv_index.resolve(choices[0],bouquet_dir=str(folder))==ref
     with open(private_index,'rb') as f:content=f.read()
     assert b'example.invalid' not in content and b'secret' not in content
-for prefix in ('ga_menu','ga_home','ga_detail','ga_live_glass'):
+for prefix in ('ga_menu','ga_home','ga_detail','ga_tip','ga_live_glass'):
     for suffix in ('','_fhd'):
         image=Image.open(DEST/(prefix+suffix+'.png'))
         assert image.mode=='RGBA' and image.getpixel((0,0))[3]==0
