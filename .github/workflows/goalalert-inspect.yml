@@ -24,7 +24,7 @@ jobs:
           assert hashlib.sha256(file.read_bytes()).hexdigest()==want
           data=subprocess.check_output(['ar','p',str(file),'data.tar.xz'])
           with tarfile.open(fileobj=io.BytesIO(data),mode='r:xz') as arc:
-              names=('plugin.py','iptv_index.py','liveonsat_parser.py','fixture_match.py')
+              names=('plugin.py','iptv_index.py','liveonsat_parser.py','fixture_match.py','refresh_iptv_index.py')
               prefix='usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/'
               for name in names:
                   matching=[m for m in arc if m.name.lstrip('./')==prefix+name]
