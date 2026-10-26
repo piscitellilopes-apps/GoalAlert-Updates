@@ -129,18 +129,19 @@ replace('''        # The scorer popup is silent. Playing before GOAL screen tran
 '''        # Goal sound was already triggered by the monitor when the goal
         # event arrived. Intro is purely visual and never starts audio.
         self.advance()''')
-replace('''            if kind=='goal' and not intro_finished:
-                which=scoring_side if scoring_side in ('home','away') else 'home''',
-'''            if kind=='goal' and not intro_finished:
-                # Start sound on the event, independent of intro rendering.
-                try:
-                    from .goalalert_audio import cheer_path,play
-                    root='/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/'
-                    if not play(cheer_path(root,config.plugins.goalalert32.cheer_style.value)):
-                        _audio_log('TORJUBEL: Audio-Backend nicht verfuegbar')
-                except Exception as exc:
-                    _audio_log('TORJUBEL-Start: '+type(exc).__name__)
-                which=scoring_side if scoring_side in ('home','away') else 'home' ''')
+replace(
+    "            if kind=='goal' and not intro_finished:\n"
+    "                which=scoring_side if scoring_side in ('home','away') else 'home'",
+    "            if kind=='goal' and not intro_finished:\n"
+    "                # Start sound on the event, independent of intro rendering.\n"
+    "                try:\n"
+    "                    from .goalalert_audio import cheer_path,play\n"
+    "                    root='/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/'\n"
+    "                    if not play(cheer_path(root,config.plugins.goalalert32.cheer_style.value)):\n"
+    "                        _audio_log('TORJUBEL: Audio-Backend nicht verfuegbar')\n"
+    "                except Exception as exc:\n"
+    "                    _audio_log('TORJUBEL-Start: '+type(exc).__name__)\n"
+    "                which=scoring_side if scoring_side in ('home','away') else 'home'")
 # Ensure the scorer always has its own green pop-up queue: at most
 # one item processed per tick, never overwritten by a second concurrent goal.
 replace('''        self.goal_update=None
