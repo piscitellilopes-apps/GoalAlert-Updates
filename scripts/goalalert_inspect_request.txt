@@ -1,1 +1,2 @@
 Snapshot the publicly published GoalAlert 6.13.13 plugin.py for review and safe patching. No user data.
+Inspection of published 6.13.14 plugin and helper modules for TV+IPTV fixes.
