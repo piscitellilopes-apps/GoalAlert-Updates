@@ -6,3 +6,5 @@ Also inspect the on-box IPTV index builder to preserve nested bouquets.
 Inspect published 6.13.15 and audio/score tables (no private data).
 
 Retry diagnostic snapshot after excluding absent optional graphics helper.
+
+Persist extracted 6.13.15 sources.
