@@ -29,7 +29,7 @@ jobs:
               for name in names:
                   matching=[m for m in arc if m.name.lstrip('./')==prefix+name]
                   if len(matching)!=1:raise ValueError('Missing '+name)
-                  p=Path('inspection/goalalert_61314_'+name)
+                  p=Path('inspection/goalalert_61315_'+name)
                   p.parent.mkdir(parents=True,exist_ok=True)
                   p.write_bytes(arc.extractfile(matching[0]).read())
                   print('Extracted',name,p.stat().st_size)
