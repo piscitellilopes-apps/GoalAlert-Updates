@@ -515,5 +515,9 @@ for k in range(12):
     art=Image.open(DEST/('ga_goal_intro_%02d.png'%k))
     assert art.mode=='RGBA' and art.getpixel((0,0))[3]==0
 assert (DEST/'goalalert_lineups.py').is_file() and (DEST/'goalalert_standings.py').is_file()
+# Test imports create bytecode caches; never include them in public IPKs.
+import shutil
+for cache in DEST.rglob('__pycache__'):
+    shutil.rmtree(cache)
 subprocess.run(['python3','scripts/build_ipk.py'],cwd=ROOT,check=True)
 print('GoalAlert 6.13.15 validated: safe info screens, transparent TV, nested IPTV, guide lookup, GOAL glow')
