@@ -36,7 +36,7 @@ jobs:
           PY
           git config user.name goalalert-inspection-bot
           git config user.email github-actions[bot]@users.noreply.github.com
-          git add inspection/goalalert_61314_*.py
+          git add inspection/goalalert_61315_*.py
           if ! git diff --cached --quiet; then
             git commit -m "Snapshot 6.13.15 source and public helper libraries for targeted fixes"
             git push
