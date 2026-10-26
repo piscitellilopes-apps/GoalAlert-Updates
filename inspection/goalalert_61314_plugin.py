@@ -635,7 +635,7 @@ def _fixture_local_day(game):
     except (ValueError,TypeError,OverflowError):
         return datetime.now().strftime('%Y-%m-%d')
 
-def liveonsat_schedule(day=None):
+def liveonsat_schedule(day=None,force=False):
     """Retain every match from today's full programme, including started games.
 
     Some LiveOnSat pages are rolling/partial. Combine their fixtures and the
@@ -661,7 +661,7 @@ def liveonsat_schedule(day=None):
         try:
             with open(cache_file) as f:cache=json.load(f)
         except Exception:cache={}
-    if (cache.get('date')==requested and time.time()-float(cache.get('saved',0))<600
+    if (not force and cache.get('date')==requested and time.time()-float(cache.get('saved',0))<600
             and cache.get('games')):
         return cache['games'],'LiveOnSat: %s (%d Begegnungen)'%(requested,len(cache['games']))
     days_apart=abs((_date.fromisoformat(requested)-_date.fromisoformat(today)).days)
@@ -730,10 +730,10 @@ class BaseScreen(Screen):
         self.skin=_goalalert_hd_skin(type(self).skin)
         Screen.__init__(self,session)
         self["theme_bg"]=Pixmap()
-    skin="""<screen name="GoalAlertView" position="center,center" size="950,610" flags="wfNoBorder" backgroundColor="#07162F">
-    <widget name="theme_bg" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/ga_menu.png" position="0,0" size="950,610" zPosition="0" alphatest="off" />
+    skin="""<screen name="GoalAlertView" position="center,center" size="950,610" flags="wfNoBorder" transparent="1" backgroundColor="transparent">
+    <widget name="theme_bg" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/ga_menu.png" position="0,0" size="950,610" zPosition="0" transparent="1" alphatest="blend" />
     <widget name="heading" position="36,116" size="880,47" font="Regular;28" foregroundColor="#E8F6FF" transparent="1" zPosition="2" />
-    <widget name="menu" position="38,177" size="874,328" itemHeight="30" font="Regular;20" foregroundColor="#FFFFFF" backgroundColor="#101E3F" scrollbarMode="showOnDemand" zPosition="2" />
+    <widget name="menu" position="38,177" size="874,328" itemHeight="30" font="Regular;20" foregroundColor="#FFFFFF" transparent="1" backgroundColor="#142D45" scrollbarMode="showOnDemand" zPosition="2" />
     <widget name="hint" position="38,528" size="880,54" font="Regular;18" foregroundColor="#B5D6F4" transparent="1" zPosition="2" />
     </screen>"""
     def setup(self,title,items,hint="OK: Auswaehlen     EXIT: Zurueck"):
@@ -741,6 +741,7 @@ class BaseScreen(Screen):
         self["menu"]=MenuList(items)
         self["hint"]=Label(hint)
         self["actions"]=ActionMap(["OkCancelActions","ColorActions"],{"ok":self.choose,"cancel":self.close,"red":self.red,"green":self.green,"yellow":self.yellow,"blue":self.blue},-1)
+    def choose(self):pass
     def red(self):self.close()
     def green(self):pass
     def yellow(self):pass
@@ -768,8 +769,11 @@ class LiveOnSatScreen(BaseScreen):
         self.timer.start(250,False)
         threading.Thread(target=self.fetch,daemon=True).start()
     def fetch(self):
-        try:self.pending=liveonsat_schedule(_fixture_local_day(self.match) if self.match else None)
-        except Exception as e:self.pending=([],"LiveOnSat nicht erreichbar: "+str(e)[:90])
+        try:
+            requested=_fixture_local_day(self.match) if self.match else None
+            self.pending=liveonsat_schedule(requested,force=True)
+        except Exception as e:
+            self.pending=([],"LiveOnSat nicht erreichbar: "+str(e)[:90])
     def update(self):
         if self.pending is None:return
         self.timer.stop();self.busy=False
@@ -787,9 +791,11 @@ class LiveOnSatScreen(BaseScreen):
             if not self.games:
                 self["menu"].setList(["BEGEGNUNG: "+label,
                     "Status: "+status,
-                    "Keine bestaetigten TV-Sender fuer genau dieses Spiel.",
-                    info,"BLAU: TV-Daten erneut laden"])
-                self["hint"].setText("LiveOnSat ohne sicheren Treffer | Kein falscher TV-Sender")
+                    "Kein eindeutig passender TV-Eintrag gefunden.",
+                    "TV-Spielplan oeffnen: GELB | BLAU: Neu laden",
+                    info])
+                self["hint"].setText("GELB: gesamter TV-Spielplan | BLAU: nochmals abrufen")
+                self.all_games=games
                 return
             self["menu"].setList([g.get("day","")+" | "+g.get("time","")+" | "+g["home"]+" - "+g["away"] for g in self.games])
             self["hint"].setText(status+" | %d passende TV-Eintraege | OK: Sender anzeigen"%len(self.games))
@@ -805,6 +811,9 @@ class LiveOnSatScreen(BaseScreen):
     def choose(self):
         i=self["menu"].getSelectedIndex()
         if 0<=i<len(self.games):self.open_child(LiveOnSatDetailScreen,self.games[i])
+    def yellow(self):
+        if self.match is not None:
+            self.open_child(LiveOnSatScreen)
 
 class IPTVBrowseScreen(BaseScreen):
     """Safe paginated fallback to select a sender even when no spelling matches."""
@@ -892,11 +901,7 @@ class LiveOnSatDetailScreen(BaseScreen):
         # Only the explicitly selected TV-station is searched. No bouquet scan
         # or blocking IO in Enigma2's GUI thread. The private index is built
         # separately in Settings > IPTV Live-Index aktualisieren.
-        from .iptv_index import INDEX_PATH
         if self.lookup_busy:return
-        if not os.path.isfile(INDEX_PATH):
-            self._render('IPTV-Live-Index fehlt. Zuerst in Einstellungen aktualisieren.')
-            return
         i=self['menu'].getSelectedIndex()-1
         if not (0<=i<len(self.channels)):
             self._render('Bitte TV-Senderzeile auswaehlen.')
@@ -912,12 +917,25 @@ class LiveOnSatDetailScreen(BaseScreen):
 
     def _worker(self,seq,wanted):
         try:
-            from .iptv_index import lookup
-            matches,count=lookup(wanted)
-            data=(seq,matches,count,'')
+            from .iptv_index import lookup, INDEX_PATH, list_stations
+            from .refresh_iptv_index import build
+            if not os.path.isfile(INDEX_PATH):
+                build()
+            try:matches,count=lookup(wanted)
+            except (OSError,ValueError,KeyError,EOFError):
+                build()
+                matches,count=lookup(wanted)
+            # A stale index might omit a newly added IPTV sub-bouquet.
+            if not matches:
+                try:
+                    build()
+                    matches,count=lookup(wanted)
+                except Exception:pass
+            alternatives=list_stations(limit=12000) if not matches else []
+            data=(seq,matches,count,alternatives,'')
         except Exception as exc:
-            # Avoid printing stream addresses or other sensitive details.
-            data=(seq,[],0,'IPTV-Index kann nicht geladen werden ('+type(exc).__name__+')')
+            # No stream address or secret is ever logged or displayed.
+            data=(seq,[],0,[],'IPTV-Indexfehler ('+type(exc).__name__+')')
         self.pending_lookup=data
 
     def _check_lookup(self):
@@ -926,14 +944,18 @@ class LiveOnSatDetailScreen(BaseScreen):
         if payload is None:return
         self.lookup_timer.stop()
         self.pending_lookup=None
-        seq,matches,count,error=payload
+        seq,matches,count,alternatives,error=payload
         if seq!=self.lookup_seq:return
         self.lookup_busy=False
         if error:
             self._render(error)
             return
         if not matches:
-            self._render('Kein Sender gefunden (nur %d IPTV-Live-Sender indexiert).'%count)
+            self._render('Sendername nicht eindeutig. %d IPTV-Live-Sender erfasst.'%count)
+            i=self.lookup_request
+            if alternatives and i is not None and 0<=i<len(self.channels):
+                self.session.openWithCallback(self._selected,IPTVBrowseScreen,
+                                              self.channels[i],alternatives)
             return
         i=self.lookup_request
         self._render('%d passende IPTV-Kanaele gefunden – bitte auswaehlen.'%len(matches))
@@ -1146,7 +1168,7 @@ class GoalAlertUpdateScreen(BaseScreen):
             "Version installieren (nach Bestaetigung)",
             "Update-Adresse anzeigen"],
             "OK: Auswahl  BLAU: Online  GRUEN: lokal  GELB: installieren")
-        self._status('Installiert: 6.13.14 | keine Installation gestartet')
+        self._status('Installiert: 6.13.15 | keine Installation gestartet')
     def _status(self,message):
         try:self['hint'].setText(message[:150])
         except Exception:pass
@@ -1178,10 +1200,10 @@ class GoalAlertUpdateScreen(BaseScreen):
         def worker():
             try:
                 if kind=='lokal':
-                    candidate=_goalalert_updates.newest_local_ipk('6.13.14')
+                    candidate=_goalalert_updates.newest_local_ipk('6.13.15')
                     result=('ok',candidate)
                 else:
-                    data=_goalalert_updates.check_manifest(_goalalert_updates.get_source(),'6.13.14')
+                    data=_goalalert_updates.check_manifest(_goalalert_updates.get_source(),'6.13.15')
                     if not data.get('newer'):
                         result=('info','Bereits aktuell (Online: '+data['version']+')')
                     else:
@@ -1241,10 +1263,10 @@ class GoalAlertUpdateScreen(BaseScreen):
         def worker():
             try:
                 if item['origin']=='online':
-                    ready=_goalalert_updates.download_update(item,'6.13.14')
+                    ready=_goalalert_updates.download_update(item,'6.13.15')
                 else:
                     # Reverify local package before handing over to detached installer.
-                    version=_goalalert_updates.verify_ipk(item['path'],'6.13.14')
+                    version=_goalalert_updates.verify_ipk(item['path'],'6.13.15')
                     ready=dict(item,version=version)
                 path=ready['path']
                 import hashlib
@@ -1270,15 +1292,15 @@ class GoalAlertUpdateScreen(BaseScreen):
         threading.Thread(target=worker,daemon=True).start()
 
 class Home(BaseScreen):
-    skin="""<screen name="GoalAlertHome" position="center,center" size="1120,670" flags="wfNoBorder" backgroundColor="#07162F">
-    <widget name="theme_bg" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/ga_home.png" position="0,0" size="1120,670" zPosition="0" alphatest="off" />
+    skin="""<screen name="GoalAlertHome" position="center,center" size="1120,670" flags="wfNoBorder" transparent="1" backgroundColor="transparent">
+    <widget name="theme_bg" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/ga_home.png" position="0,0" size="1120,670" zPosition="0" transparent="1" alphatest="blend" />
     <widget name="heading" position="581,27" size="502,39" font="Regular;23" foregroundColor="#B7E8FF" transparent="1" zPosition="2" />
-    <widget name="menu" position="46,135" size="513,440" itemHeight="27" font="Regular;18" foregroundColor="#FFFFFF" backgroundColor="#102548" scrollbarMode="showOnDemand" zPosition="2" />
+    <widget name="menu" position="46,135" size="513,440" itemHeight="27" font="Regular;18" foregroundColor="#FFFFFF" transparent="1" backgroundColor="#142D45" scrollbarMode="showOnDemand" zPosition="2" />
     <widget name="hint" position="46,602" size="1040,41" font="Regular;19" foregroundColor="#D9ECFF" transparent="1" zPosition="2" />
     </screen>"""
     def __init__(self,session):
         BaseScreen.__init__(self,session)
-        self.setup("GOALALERT 6.13.14 | SPORT STUDIO",["Spiele nach Datum","Live-Spiele","Meine Favoriten","Liga auswaehlen","Einstellungen","Test-Toralarm (mit Ton)","Tippschein (15 Spiele)","LiveOnSat TV-Spielplan","Datenquelle auswaehlen","Verbindung pruefen","Echte Vereinswappen testen","Gruenen Torschuetzenhinweis testen","Audio-Diagnose anzeigen","GoalAlert Live (heute)","Updates installieren"])
+        self.setup("GOALALERT 6.13.15 | SPORT STUDIO",["Spiele nach Datum","Live-Spiele","Meine Favoriten","Liga auswaehlen","Einstellungen","Test-Toralarm (mit Ton)","Tippschein (15 Spiele)","LiveOnSat TV-Spielplan","Datenquelle auswaehlen","Verbindung pruefen","Echte Vereinswappen testen","Gruenen Torschuetzenhinweis testen","Audio-Diagnose anzeigen","GoalAlert Live (heute)","Updates installieren"])
     def choose(self):
         n=self["menu"].getSelectedIndex()
         if n==0:self.open_child(GamesScreen,0)
@@ -1528,15 +1550,15 @@ class QuickLiveScreen(GamesScreen):
 
 class GameDetailScreen(BaseScreen):
     # Up to 12 scoring incidents (e.g. 6:5) fit in two columns without scrolling.
-    skin="""<screen name="GoalAlertDetails" position="center,center" size="1120,630" flags="wfNoBorder" backgroundColor="#07162F">
-    <widget name="theme_bg" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/ga_detail.png" position="0,0" size="1120,630" zPosition="0" alphatest="off" />
+    skin="""<screen name="GoalAlertDetails" position="center,center" size="1120,630" flags="wfNoBorder" transparent="1" backgroundColor="transparent">
+    <widget name="theme_bg" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/ga_detail.png" position="0,0" size="1120,630" zPosition="0" transparent="1" alphatest="blend" />
     <widget name="heading" position="310,30" size="765,40" font="Regular;24" foregroundColor="#DDF6FF" transparent="1" zPosition="2" />
     <widget name="summary" position="39,107" size="1042,40" font="Regular;24" foregroundColor="#FFE588" transparent="1" zPosition="2" />
     <widget name="events_title" position="45,160" size="1030,42" font="Regular;26" foregroundColor="#92EDFF" transparent="1" zPosition="2" />
     <widget name="events_left" position="50,210" size="493,265" font="Regular;22" foregroundColor="#EAF9FF" transparent="1" zPosition="2" />
     <widget name="events_right" position="578,210" size="490,265" font="Regular;22" foregroundColor="#EAF9FF" transparent="1" zPosition="2" />
     <widget name="events_unassigned" position="45,478" size="1030,27" font="Regular;17" foregroundColor="#F9DE86" transparent="1" zPosition="2" />
-    <widget name="menu" position="43,526" size="1032,47" itemHeight="43" font="Regular;23" foregroundColor="#FFFFFF" backgroundColor="#114D92" scrollbarMode="showNever" zPosition="2" />
+    <widget name="menu" position="43,526" size="1032,47" itemHeight="43" font="Regular;23" foregroundColor="#FFFFFF" transparent="1" backgroundColor="#244A68" scrollbarMode="showNever" zPosition="2" />
     <widget name="hint" position="44,585" size="1020,34" font="Regular;18" foregroundColor="#AECFEB" transparent="1" zPosition="2" />
     </screen>"""
     def __init__(self,session,game):
@@ -1648,7 +1670,7 @@ class GoalAlertLineupScreen(BaseScreen):
             from urllib.parse import quote
             url=("https://site.api.espn.com/apis/site/v2/sports/soccer/%s/summary?event=%s"%
                  (quote(league,safe='.'),event_id))
-            request=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 GoalAlert/6.13.14'})
+            request=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 GoalAlert/6.13.15'})
             with urllib.request.urlopen(request,timeout=12) as response:
                 payload=json.load(response)
             self.result=format_lineups(payload)
@@ -1686,13 +1708,13 @@ class GoalAlertLeagueTableScreen(BaseScreen):
         self.timer.start(250,False)
         threading.Thread(target=self.fetch,daemon=True).start()
     def fetch(self):
-        from .goalalert_standings import parse_standings, validate_league_code
         try:
+            from .goalalert_standings import parse_standings, validate_league_code
             league=validate_league_code(self.game.get("league"))
             from urllib.parse import quote
             url=("https://site.api.espn.com/apis/v2/sports/soccer/%s/standings"%
                  quote(league,safe="."))
-            request=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 GoalAlert/6.13.14"})
+            request=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 GoalAlert/6.13.15"})
             with urllib.request.urlopen(request,timeout=12) as response:
                 payload=json.load(response)
             self.result=parse_standings(payload)
@@ -2104,8 +2126,8 @@ class TipScreen(BaseScreen):
 
 class TipSlipScreen(BaseScreen):
     # Sporttip-inspired readable two-column TV slip; all amounts are simulations.
-    skin="""<screen name="GoalAlertTicket" position="center,center" size="1120,660" flags="wfNoBorder" backgroundColor="#07162F">
-    <widget name="theme_bg" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/ga_tip.png" position="0,0" size="1120,660" zPosition="0" alphatest="off" />
+    skin="""<screen name="GoalAlertTicket" position="center,center" size="1120,660" flags="wfNoBorder" transparent="1" backgroundColor="transparent">
+    <widget name="theme_bg" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/ga_tip.png" position="0,0" size="1120,660" zPosition="0" transparent="1" alphatest="blend" />
     <widget name="heading" position="317,30" size="755,42" font="Regular;27" foregroundColor="#E2F7FF" transparent="1" zPosition="2" />
     <widget name="ticket_sub" position="42,93" size="1034,40" font="Regular;24" foregroundColor="#FFD966" transparent="1" zPosition="2" />
     <widget name="ticket_left" position="47,177" size="501,286" font="Regular;21" foregroundColor="#FFFFFF" transparent="1" zPosition="2" />
@@ -2405,7 +2427,7 @@ def preload_favorite_crests(game):
     threading.Thread(target=run,daemon=True).start()
 
 class GoalIntroScreen(Screen):
-    """Short top-centre GOAL roll-in; no interruption of the DVB TV service."""
+    """Short top-centre animated GOAL glow; no interruption of TV service."""
     def __init__(self,session,scoring_team='',crest_path=None):
         markup=('<screen name="GoalIntro" position="center,18" size="640,104" '
                 'flags="wfNoBorder" transparent="1" backgroundColor="transparent">'
@@ -2421,7 +2443,7 @@ class GoalIntroScreen(Screen):
         Screen.__init__(self,session)
         self['intro_frame']=Pixmap()
         self['intro_crest']=Pixmap()
-        self['intro_team']=Label(str(scoring_team or 'TOR!')[:23])
+        self['intro_team']=Label(str(scoring_team or 'GOAL!')[:23])
         self.crest_path=crest_path
         self.index=0
         self.anim=eTimer()
@@ -2457,7 +2479,7 @@ class GoalIntroScreen(Screen):
             play(cheer_path(root,config.plugins.goalalert32.cheer_style.value))
         except Exception as exc:_audio_log('Tor-Intro Audio: '+str(exc)[:110])
         self.advance()
-        self.anim.start(80,False)
+        self.anim.start(90,False)
     def advance(self):
         if self.index>=12:
             self.anim.stop()
@@ -2705,7 +2727,7 @@ def _espn_red_cards(game):
     url=("https://site.api.espn.com/apis/site/v2/sports/soccer/%s/summary?%s"
          %(league,urlencode({'event':ident})))
     try:
-        req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 GoalAlert/6.13.14'})
+        req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 GoalAlert/6.13.15'})
         with urllib.request.urlopen(req,timeout=8) as response:
             data=json.load(response)
         header=data.get('header') or {}

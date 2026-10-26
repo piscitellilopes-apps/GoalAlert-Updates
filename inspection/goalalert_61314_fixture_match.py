@@ -10,6 +10,16 @@ from difflib import SequenceMatcher
 
 # Genuine club aliases, not generic substring matching against league names.
 ALIASES = {
+    'bsc young boys':'young boys', 'young boys bern':'young boys',
+    'fc basel 1893':'basel', 'fc basel':'basel',
+    'fc zurich':'zurich', 'fc zürich':'zurich',
+    'fc luzern':'luzern', 'fc st gallen 1879':'st gallen',
+    'fc st gallen':'st gallen', 'servette fc':'servette',
+    'fc lugano':'lugano', 'fc lausanne sport':'lausanne',
+    'lausanne sport':'lausanne', 'grasshopper club zurich':'grasshoppers',
+    'grasshopper zurich':'grasshoppers', 'fc sion':'sion',
+    'fc winterthur':'winterthur',
+    'sport tv 1':'sport tv 1',
     'as roma':'roma', 'roma as':'roma', 'roma fc':'roma',
     'inter milan':'inter', 'inter milano':'inter',
     'internazionale':'inter', 'internazionale milano':'inter',
