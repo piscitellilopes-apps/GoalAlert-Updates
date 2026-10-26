@@ -19,22 +19,25 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import io,tarfile,subprocess,hashlib
-          file=Path('enigma2-plugin-extensions-goalalert_6.13.13_all.ipk')
-          want='fc1880bd2f332599a688d0e62bd7289b08a1d9b8657bcd84c2caa08ab8f574f8'
+          file=Path('enigma2-plugin-extensions-goalalert_6.13.14_all.ipk')
+          want='397ed960397ba2e1149382ad5252144cff02b82d803da6745591e33429b1893c'
           assert hashlib.sha256(file.read_bytes()).hexdigest()==want
           data=subprocess.check_output(['ar','p',str(file),'data.tar.xz'])
           with tarfile.open(fileobj=io.BytesIO(data),mode='r:xz') as arc:
-              plugin=next(m for m in arc if m.name.lstrip('./')=='usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/plugin.py')
-              s=arc.extractfile(plugin).read()
-          p=Path('inspection/goalalert_61313_plugin.py')
-          p.parent.mkdir(parents=True,exist_ok=True)
-          p.write_bytes(s)
-          print('Extracted clean baseline',len(s),'bytes')
+              names=('plugin.py','iptv_index.py','liveonsat_parser.py','fixture_match.py')
+              prefix='usr/lib/enigma2/python/Plugins/Extensions/GoalAlert/'
+              for name in names:
+                  matching=[m for m in arc if m.name.lstrip('./')==prefix+name]
+                  if len(matching)!=1:raise ValueError('Missing '+name)
+                  p=Path('inspection/goalalert_61314_'+name)
+                  p.parent.mkdir(parents=True,exist_ok=True)
+                  p.write_bytes(arc.extractfile(matching[0]).read())
+                  print('Extracted',name,p.stat().st_size)
           PY
           git config user.name goalalert-inspection-bot
           git config user.email github-actions[bot]@users.noreply.github.com
-          git add inspection/goalalert_61313_plugin.py
+          git add inspection/goalalert_61314_*.py
           if ! git diff --cached --quiet; then
-            git commit -m "Snapshot public GoalAlert 6.13.13 Python source for corrections"
+            git commit -m "Snapshot 6.13.14 source and public helper libraries for targeted fixes"
             git push
           fi
