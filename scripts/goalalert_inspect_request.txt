@@ -4,3 +4,5 @@ Inspection of published 6.13.14 plugin and helper modules for TV+IPTV fixes.
 Also inspect the on-box IPTV index builder to preserve nested bouquets.
 
 Inspect published 6.13.15 and audio/score tables (no private data).
+
+Retry diagnostic snapshot after excluding absent optional graphics helper.
