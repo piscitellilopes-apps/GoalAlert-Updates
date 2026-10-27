@@ -31,15 +31,14 @@ old=index.read_text(encoding="utf-8")
 # Stable and narrow: IPTV station names must retain TV as part of Sport TV.
 assert old.count("live tv premium vip") == 1
 old=old.replace("live tv premium vip","live premium vip")
-# Remove combined display-resolution suffixes before the broadcaster-name
-# tokenizer splits "4K" into a spurious channel number "4" and letter "k".
-assert "    tokens=re.findall(r'[a-z]+|\\d+',text)" in old
+# Remove display-resolution suffixes BEFORE alphanumeric token splitting;
+# otherwise "4K" becomes "4 k" and can be confused with Sport TV 4.
+assert "    text=re.sub(r'(?<=[a-z])(?=\\d)|(?<=\\d)(?=[a-z])',' ',text)" in old
 old=old.replace(
-    "    tokens=re.findall(r'[a-z]+|\\d+',text)",
+    "    text=re.sub(r'(?<=[a-z])(?=\\d)|(?<=\\d)(?=[a-z])',' ',text)",
     "    text=re.sub(r'\\b(?:2k|4k|8k|720p|1080p|2160p)\\b',' ',text)\n"
-    "    tokens=re.findall(r'[a-z]+|\\d+',text)"
+    "    text=re.sub(r'(?<=[a-z])(?=\\d)|(?<=\\d)(?=[a-z])',' ',text)"
 )
-
 # Keep brand prefix and optional channel number intact. PT/Portugal and HD
 # are ignored anywhere, not only at beginning or end. Lookup returns ALL
 # reasonable alternatives; there is never a blind automatic zap.
