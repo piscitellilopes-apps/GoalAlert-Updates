@@ -169,6 +169,7 @@ def _goalalert_schedule_fullscreen_tv(session):
     status={'attempts':0}
     def finish():
         status['attempts']+=1
+        retry=False
         try:
             current=getattr(session,'current_dialog',None)
             if current is None:return
@@ -183,16 +184,16 @@ def _goalalert_schedule_fullscreen_tv(session):
                              module.startswith('Plugins.')))
             if own or navigation:
                 current.close()
-                # Enigma2 shows previous dialog only after the current
-                # dialog closes. Defer again so we never close a hidden
-                # or already disposed screen.
+                # Enigma2 shows the previous dialog after closing this one.
+                # Continue only for an eligible navigation stack.
                 if status['attempts']<7:
+                    retry=True
                     timer.start(170,True)
         except Exception as exc:
+            retry=False
             _crest_log('TV-Vollbild-Aufraeumen: '+type(exc).__name__)
         finally:
-            if (status['attempts']>=7 or
-                (getattr(session,'current_dialog',None) is None)):
+            if not retry:
                 try:_GOALALERT_FULLSCREEN_TIMERS.remove(timer)
                 except ValueError:pass
     # Retain timer until stack is completely unwound; start after callbacks.
