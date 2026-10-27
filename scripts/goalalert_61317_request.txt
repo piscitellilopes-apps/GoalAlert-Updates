@@ -2,3 +2,5 @@ Build version 6.13.17 from SHA256-pinned 6.13.16 package; run IPTV country-name,
 Rebuild after normalizing 4K and resolution labels before number tokens.
 
 Third check: correct escaped newline in generated IPTV normalization code.
+
+Correct early handling of 4K before splitting alphanumeric broadcaster names.
