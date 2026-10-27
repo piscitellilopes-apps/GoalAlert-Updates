@@ -1,1 +1,2 @@
 Build version 6.13.17 from SHA256-pinned 6.13.16 package; run IPTV country-name, channel-number, no-description bouquet and safe TV return regression tests; publish only after success.
+Rebuild after normalizing 4K and resolution labels before number tokens.
