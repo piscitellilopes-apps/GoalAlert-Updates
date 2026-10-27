@@ -36,7 +36,7 @@ old=old.replace("live tv premium vip","live premium vip")
 assert "    tokens=re.findall(r'[a-z]+|\\d+',text)" in old
 old=old.replace(
     "    tokens=re.findall(r'[a-z]+|\\d+',text)",
-    "    text=re.sub(r'\\b(?:2k|4k|8k|720p|1080p|2160p)\\b',' ',text)\\n"
+    "    text=re.sub(r'\\b(?:2k|4k|8k|720p|1080p|2160p)\\b',' ',text)\n"
     "    tokens=re.findall(r'[a-z]+|\\d+',text)"
 )
 
