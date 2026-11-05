@@ -1,0 +1,1 @@
+Build 6.13.18 from verified 6.13.17 IPK; restore match-specific TV-Sender route and prohibit fallback to entire daily schedule. Keep crests, goal notifications and audio untouched.
