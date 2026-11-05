@@ -1,0 +1,1 @@
+Release 6.13.19 from SHA256-pinned 6.13.18; sanitize LiveOnSat HTML/CSS channel entries and cached data, add user-selectable bright popup colors, improve nonblocking audio sinks. Preserve crest and fixture routing.
