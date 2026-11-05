@@ -1,0 +1,45 @@
+name: GoalAlert 6.13.19 TV list audio and colours
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/goalalert_61319_request.txt'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: goalalert-61319-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Build and test from SHA256 pinned 6.13.18
+        run: |
+          python3 scripts/release_61319.py
+      - name: Validate package, version and hash
+        run: |
+          python3 scripts/publish.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          manifest=json.loads(Path('latest.json').read_text())
+          assert manifest['version']=='6.13.19'
+          assert manifest['package']=='enigma2-plugin-extensions-goalalert'
+          package=Path(manifest['url'].rsplit('/',1)[-1])
+          assert package.is_file()
+          assert hashlib.sha256(package.read_bytes()).hexdigest()==manifest['sha256']
+          print('GoalAlert 6.13.19 manifest and package checksum OK')
+          PY
+      - name: Publish TV updater release
+        run: |
+          git config user.name goalalert-update-bot
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git add enigma2-plugin-extensions-goalalert_6.13.19_all.ipk latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Release GoalAlert 6.13.19 clean TV list audio and colours'
+            git push
+          fi
