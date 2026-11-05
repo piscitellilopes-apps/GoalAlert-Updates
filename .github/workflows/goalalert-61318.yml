@@ -1,0 +1,43 @@
+name: GoalAlert 6.13.18 restore match broadcasters
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/goalalert_61318_request.txt'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: goalalert-61318-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Build checked 6.13.18 patch from checksum-pinned IPK
+        run: |
+          python3 scripts/release_61318.py
+      - name: Validate package and manifest
+        run: |
+          python3 scripts/publish.py
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          m=json.loads(Path("latest.json").read_text())
+          assert m["version"]=="6.13.18"
+          package=Path(m["url"].rsplit("/",1)[-1])
+          assert package.is_file()
+          assert hashlib.sha256(package.read_bytes()).hexdigest()==m["sha256"]
+          PY
+      - name: Publish verified package and online TV update
+        run: |
+          git config user.name goalalert-update-bot
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git add enigma2-plugin-extensions-goalalert_6.13.18_all.ipk latest.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Release GoalAlert 6.13.18 broadcaster navigation fix'
+            git push
+          fi
