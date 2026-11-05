@@ -62,13 +62,13 @@ source_list=[]
 downloaded=[]
 def fetch_audio(slug):
     url="https://sfxmint.com/dl/"+slug+".mp3"
-    for attempt in range(3):
+    for attempt in range(1):
         try:
             req=urllib.request.Request(url,headers={
               "User-Agent":"Mozilla/5.0 (compatible; GoalAlertCC0/6.13.20)",
               "Accept":"audio/mpeg,audio/*;q=0.9,*/*;q=0.1"
             })
-            with urllib.request.urlopen(req,timeout=35) as response:
+            with urllib.request.urlopen(req,timeout=10) as response:
                 chunk=response.read(3_000_000)
             if len(chunk)<3000 or len(chunk)>=3_000_000:
                 raise ValueError("Unexpected audio file length")
@@ -76,7 +76,7 @@ def fetch_audio(slug):
                 raise ValueError("Unexpected HTML in audio response")
             return chunk
         except Exception as exc:
-            if attempt==2:
+            if attempt==0:
                 print("Download unavailable",slug,type(exc).__name__)
                 return None
             time.sleep(2+attempt)
@@ -175,7 +175,7 @@ st=s.index("class SettingsScreen(BaseScreen):")
 en=s.index("TIP_LEAGUES=[",st)
 sec=s[st:en]
 old='''"Torjubel: "+{"classic":"Klassisch","stadium":"Stadion-Echo",
-                          "double":"Doppeljubel","short":"Kurzer Tor-Ruf"}.get(c.cheer_style.value,"Klassisch"),'''
+                         "double":"Doppeljubel","short":"Kurzer Tor-Ruf"}.get(c.cheer_style.value,"Klassisch"),'''
 assert sec.count(old)==1
 sec=sec.replace(old,''' "Torjubel: "+GOALALERT_CHEER_LABELS.get(c.cheer_style.value,"01 Stadion-Tor"),'''.lstrip(),1)
 old='''            values=["classic","stadium","double","short"]
