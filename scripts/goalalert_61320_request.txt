@@ -1,1 +1,3 @@
 Publish 6.13.20: 20 selectable CC0 stadium cheers; preserve TV navigation, color settings and club crests.
+
+Retry verified 20-cheer build with corrected menu-anchor and bounded audio source requests.
